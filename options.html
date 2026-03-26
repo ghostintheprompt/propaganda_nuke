@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>propaganda_nuke settings</title>
+    <link rel="stylesheet" href="theme.css">
+  </head>
+  <body class="pn-panel-page">
+    <main class="pn-page-wrap">
+      <section class="pn-section" style="margin-bottom: 16px;">
+        <div class="pn-wordmark">propaganda_nuke</div>
+        <h1 class="pn-title" style="font-size: clamp(28px, 5vw, 48px); margin-top: 10px;">Configuration</h1>
+        <p class="pn-copy">Tune the system without making it noisy. The design stays sparse; the control stays precise.</p>
+      </section>
+
+      <div class="pn-grid" style="gap: 16px;">
+        <section class="pn-section">
+          <div class="pn-toggle">
+            <div class="pn-toggle__meta">
+              <strong>Enabled</strong>
+              <span>Master switch for filtering</span>
+            </div>
+            <label class="pn-switch">
+              <input type="checkbox" id="enabled">
+              <span class="pn-slider"></span>
+            </label>
+          </div>
+
+          <div class="pn-toggle">
+            <div class="pn-toggle__meta">
+              <strong>Strict mode</strong>
+              <span>Redirect blocked pages to the intervention screen</span>
+            </div>
+            <label class="pn-switch">
+              <input type="checkbox" id="strictMode">
+              <span class="pn-slider"></span>
+            </label>
+          </div>
+
+          <div class="pn-toggle">
+            <div class="pn-toggle__meta">
+              <strong>Friction mode</strong>
+              <span>Require a countdown before override</span>
+            </div>
+            <label class="pn-switch">
+              <input type="checkbox" id="frictionMode">
+              <span class="pn-slider"></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="pn-section">
+          <label class="pn-label" for="countdown">Countdown seconds</label>
+          <input class="pn-input" type="number" id="countdown" min="0" max="120">
+        </section>
+
+        <section class="pn-section">
+          <label class="pn-label" for="domains">Blocked domains</label>
+          <textarea class="pn-textarea" id="domains"></textarea>
+        </section>
+
+        <section class="pn-section">
+          <label class="pn-label" for="keywords">Manipulative keywords</label>
+          <textarea class="pn-textarea" id="keywords"></textarea>
+        </section>
+
+        <section class="pn-section">
+          <div class="pn-actions">
+            <button id="save-btn" class="pn-button pn-button--solid">Save settings</button>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
