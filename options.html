@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>propaganda_nuke · configuration</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+      .pn-options-header {
+        border-bottom: 1px solid var(--pn-border);
+        padding: 0 0 28px;
+        margin-bottom: 32px;
+      }
+
+      .pn-options-section {
+        background: var(--pn-surface);
+        border: 1px solid var(--pn-border);
+        margin-bottom: 16px;
+        padding: 16px 18px 12px;
+        position: relative;
+      }
+
+      .pn-options-section::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 1px;
+        background: var(--pn-border-strong);
+      }
+
+      .pn-section-title {
+        font-family: var(--pn-mono);
+        font-size: 9px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--pn-red);
+        margin: 0 0 14px;
+      }
+
+      .pn-select {
+        width: 100%;
+        background: var(--pn-surface-2);
+        border: 1px solid var(--pn-border);
+        color: var(--pn-text);
+        font-family: var(--pn-mono);
+        font-size: 12px;
+        padding: 9px 11px;
+        outline: none;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+
+      .pn-select:focus { border-color: var(--pn-amber); }
+
+      .pn-form-row {
+        margin-bottom: 14px;
+      }
+
+      .pn-form-row:last-child { margin-bottom: 0; }
+
+      .pn-options-footer {
+        display: flex;
+        gap: 10px;
+        padding-top: 8px;
+      }
+
+      .pn-options-footer .pn-button {
+        flex: 0 1 auto;
+        padding: 10px 24px;
+      }
+    </style>
+  </head>
+  <body class="pn-panel-page">
+    <main class="pn-page-wrap">
+
+      <div class="pn-options-header">
+        <div class="pn-wordmark" style="margin-bottom: 10px;">propaganda_nuke</div>
+        <div class="pn-stripe"></div>
+        <h1 class="pn-title">Configuration</h1>
+        <p class="pn-copy">Tune the system. The design stays sparse; the control stays precise.</p>
+      </div>
+
+      <!-- Behaviour -->
+      <div class="pn-options-section">
+        <p class="pn-section-title">Behaviour</p>
+
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Enabled</strong>
+            <span>Master switch for all filtering</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="enabled">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Strict mode</strong>
+            <span>Redirect blocked pages to intervention screen</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="strictMode">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Friction mode</strong>
+            <span>Require countdown before override</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="frictionMode">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Block news sites</strong>
+            <span>Include news domains in blocklist</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="blockNews">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Block social media</strong>
+            <span>Include social domains in blocklist</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="blockSocial">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Timing & intensity -->
+      <div class="pn-options-section">
+        <p class="pn-section-title">Timing &amp; intensity</p>
+
+        <div class="pn-form-row">
+          <label class="pn-label" for="countdown">Countdown seconds</label>
+          <input class="pn-input" type="number" id="countdown" min="0" max="120" style="width: 140px;">
+        </div>
+
+        <div class="pn-form-row">
+          <label class="pn-label" for="intensity">Filter intensity</label>
+          <select class="pn-select" id="intensity" style="width: 200px;">
+            <option value="low">Low — domain block only</option>
+            <option value="medium">Medium — domain + 3+ keywords</option>
+            <option value="high">High — domain + 2+ keywords</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Domains -->
+      <div class="pn-options-section">
+        <p class="pn-section-title">Blocked domains</p>
+        <div class="pn-form-row">
+          <label class="pn-label" for="domains">One domain per line</label>
+          <textarea class="pn-textarea" id="domains"></textarea>
+        </div>
+      </div>
+
+      <!-- Keywords -->
+      <div class="pn-options-section">
+        <p class="pn-section-title">Manipulative keywords</p>
+        <div class="pn-form-row">
+          <label class="pn-label" for="keywords">One keyword per line</label>
+          <textarea class="pn-textarea" id="keywords"></textarea>
+        </div>
+      </div>
+
+      <div class="pn-options-footer">
+        <button id="save-btn" class="pn-button pn-button--solid">Save settings</button>
+      </div>
+
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
