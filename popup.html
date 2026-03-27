@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>propaganda_nuke</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+      body { width: 360px; }
+
+      .pn-popup-wrap {
+        padding: 0;
+      }
+
+      /* Header row */
+      .pn-popup-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 14px 10px;
+        border-bottom: 1px solid var(--pn-border);
+        background: var(--pn-surface-2);
+      }
+
+      .pn-popup-title {
+        font-family: var(--pn-mono);
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--pn-text-dim);
+      }
+
+      .pn-status-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--pn-mono);
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--pn-green-bright);
+      }
+
+      /* Stat row */
+      .pn-stat-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1px;
+        background: var(--pn-border);
+        border-bottom: 1px solid var(--pn-border);
+      }
+
+      .pn-stat-cell {
+        background: var(--pn-bg);
+        padding: 12px 12px 11px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .pn-stat-cell__label {
+        font-family: var(--pn-mono);
+        font-size: 7.5px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--pn-text-faint);
+        white-space: nowrap;
+      }
+
+      .pn-stat-cell__value {
+        font-family: var(--pn-mono);
+        font-size: 20px;
+        line-height: 1;
+        color: var(--pn-red);
+        letter-spacing: -0.01em;
+      }
+
+      /* Toggle section */
+      .pn-toggle-section {
+        padding: 4px 14px 2px;
+        border-bottom: 1px solid var(--pn-border);
+      }
+
+      .pn-toggle {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--pn-border);
+      }
+
+      .pn-toggle:last-child { border-bottom: none; }
+
+      /* Actions */
+      .pn-popup-footer {
+        display: flex;
+        gap: 0;
+        border-top: 1px solid var(--pn-border);
+      }
+
+      .pn-popup-footer .pn-button {
+        flex: 1;
+        border: none;
+        border-right: 1px solid var(--pn-border);
+        padding: 11px 0;
+        font-size: 9.5px;
+        letter-spacing: 0.15em;
+      }
+
+      .pn-popup-footer .pn-button:last-child {
+        border-right: none;
+      }
+
+      .pn-popup-footer .pn-button--solid {
+        background: var(--pn-red-dim);
+        color: var(--pn-red);
+        border-color: transparent;
+        border-right-color: var(--pn-border);
+      }
+
+      .pn-popup-footer .pn-button--solid:hover {
+        background: var(--pn-red);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body class="pn-panel-page">
+    <div class="pn-popup-wrap">
+
+      <!-- Header -->
+      <div class="pn-popup-header">
+        <span class="pn-popup-title">propaganda_nuke</span>
+        <div class="pn-status-row">
+          <div class="pn-status-dot"></div>
+          armed
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="pn-stat-row">
+        <div class="pn-stat-cell">
+          <span class="pn-stat-cell__label">Blocked</span>
+          <span class="pn-stat-cell__value" id="blocked-clicks">0</span>
+        </div>
+        <div class="pn-stat-cell">
+          <span class="pn-stat-cell__label">Hidden</span>
+          <span class="pn-stat-cell__value" id="hidden-results">0</span>
+        </div>
+        <div class="pn-stat-cell">
+          <span class="pn-stat-cell__label">Pages</span>
+          <span class="pn-stat-cell__value" id="blocked-pages">0</span>
+        </div>
+      </div>
+
+      <!-- Toggles -->
+      <div class="pn-toggle-section">
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Enabled</strong>
+            <span>Master switch</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="enabled">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Strict mode</strong>
+            <span>Redirect blocked pages</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="strictMode">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+        <div class="pn-toggle">
+          <div class="pn-toggle__meta">
+            <strong>Friction mode</strong>
+            <span>Countdown before override</span>
+          </div>
+          <label class="pn-switch">
+            <input type="checkbox" id="frictionMode">
+            <span class="pn-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="pn-popup-footer">
+        <button id="save-btn" class="pn-button pn-button--solid">Commit</button>
+        <button id="options-btn" class="pn-button">Configure →</button>
+      </div>
+
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
