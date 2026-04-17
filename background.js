@@ -58,14 +58,67 @@ const DEFAULT_SETTINGS = {
   }
 };
 
-async function getSettings() {
-  const data = await chrome.storage.sync.get("pn_settings");
-  if (!data.pn_settings) {
-    await chrome.storage.sync.set({ pn_settings: DEFAULT_SETTINGS });
-    return structuredClone(DEFAULT_SETTINGS);
+const TRACKER_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "fbclid", "gclid", "msclkid"];
+
+async function updateDecontaminationRules() {
+  try {
+    const rules = TRACKER_PARAMS.map((param, index) => ({
+      id: index + 1,
+      priority: 1,
+      action: {
+        type: "redirect",
+        redirect: { transform: { queryTransform: { removeParameters: [param] } } }
+      },
+      condition: {
+        urlFilter: `*?*${param}=*`,
+        resourceTypes: ["main_frame", "sub_frame"]
+      }
+    }));
+
+    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
+    const oldRuleIds = oldRules.map(r => r.id);
+
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: oldRuleIds,
+      addRules: rules
+    });
+    console.log("Radiation Shield: Decontamination rules deployed.");
+  } catch (err) {
+    console.error("Failed to deploy decontamination rules:", err);
   }
-  return data.pn_settings;
 }
+
+async function getSettings() {
+  const syncData = await chrome.storage.sync.get("pn_settings");
+  
+  // Attempt to load Enterprise GPO settings
+  let managedData = {};
+  try {
+    managedData = await chrome.storage.managed.get("pn_settings");
+  } catch (e) {
+    // Managed storage not available or no policy set
+  }
+
+  let settings = syncData.pn_settings || structuredClone(DEFAULT_SETTINGS);
+  
+  if (managedData && managedData.pn_settings) {
+    // Enterprise overrides
+    settings = { ...settings, ...managedData.pn_settings, managed: true };
+  }
+
+  if (!syncData.pn_settings) {
+    await chrome.storage.sync.set({ pn_settings: settings });
+  }
+  return settings;
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  updateDecontaminationRules();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  updateDecontaminationRules();
+});
 
 async function saveSettings(partial) {
   const current = await getSettings();

@@ -178,11 +178,23 @@
         </div>
       </div>
 
+      <!-- War Room / Forensic Export -->
+      <div class="pn-options-section">
+        <p class="pn-section-title">War Room: Forensic Export</p>
+        <p class="pn-copy" style="font-size: 11px; margin-bottom: 12px;">
+          Generate a signed "Digital Fallout Map" (JSON) of all blocked Influence Operation domains for forensic attribution.
+        </p>
+        <div class="pn-form-row">
+           <button id="export-btn" class="pn-button pn-button--ghost-red" style="flex: 0 1 auto; padding: 10px 20px;">Export Fallout Map (.JSON)</button>
+        </div>
+      </div>
+
       <div class="pn-options-footer">
         <button id="save-btn" class="pn-button pn-button--solid">Save settings</button>
       </div>
 
     </main>
+    <script src="war_room/fallout_map.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

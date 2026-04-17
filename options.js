@@ -12,7 +12,29 @@ async function load() {
   document.getElementById("intensity").value      = settings.intensity || "high";
   document.getElementById("domains").value        = settings.blockedDomains.join("\n");
   document.getElementById("keywords").value       = settings.manipulativeKeywords.join("\n");
+
+  if (settings.managed) {
+    const saveBtn = document.getElementById("save-btn");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "MANAGED BY ENTERPRISE POLICY";
+    saveBtn.classList.add("pn-button--disabled");
+    
+    // Add a visual indicator
+    const header = document.querySelector(".pn-options-header");
+    const badge = document.createElement("div");
+    badge.className = "pn-badge";
+    badge.style.marginTop = "10px";
+    badge.textContent = "ENFORCED BY COMMAND & CONTROL (GPO)";
+    header.appendChild(badge);
+  }
 }
+
+document.getElementById("export-btn").addEventListener("click", async () => {
+  const response = await chrome.runtime.sendMessage({ type: "getSettings" });
+  if (response?.ok) {
+    await window.FalloutMap.export(response.settings);
+  }
+});
 
 document.getElementById("save-btn").addEventListener("click", async () => {
   await chrome.runtime.sendMessage({

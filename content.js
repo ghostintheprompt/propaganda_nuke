@@ -124,6 +124,21 @@
   // Initial scan
   scanLinks();
 
+  // Page-level Semantic Nuke
+  if (!domainMatches(location.href)) {
+    const pageText = document.body.innerText;
+    const pageScore = window.SemanticNuke.calculateScore(pageText, settings.manipulativeKeywords);
+    // Thresholds: High=15, Medium=30, Low=60
+    const nukeThreshold = settings.intensity === "high" ? 15 : settings.intensity === "medium" ? 30 : 60;
+    
+    if (pageScore >= nukeThreshold) {
+      const triggers = settings.manipulativeKeywords.filter(word => pageText.toLowerCase().includes(word.toLowerCase()));
+      window.SemanticNuke.execute(pageScore, triggers);
+    }
+  }
+
+  window.pnScanLinks = scanLinks; // Expose for bypass re-scan
+
   // Watch for dynamic content — debounced so it doesn't fire on every mutation
   let debounceTimer = null;
   const observer = new MutationObserver(() => {
