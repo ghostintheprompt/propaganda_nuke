@@ -1,4 +1,6 @@
-<img src="propaganda_nuke.png" width="200">
+<p align="center">
+  <img src="propaganda_nuke.png" width="520">
+</p>
 
 # propaganda_nuke
 A browser extension for resisting emotional capture. — v1.0
