@@ -1,5 +1,9 @@
 # propaganda_nuke
 
+<div align="center">
+  <img src="propaganda_nuke.png" width="256" height="256" alt="Propaganda Nuke Icon" />
+</div>
+
 A browser extension for resisting emotional capture.
 
 propaganda_nuke blocks, blurs, and inserts friction between your attention and systems designed to farm fear, outrage, and helplessness.
@@ -124,4 +128,4 @@ If you want control over your attention, it might help.
 
 ## License
 
-MIT (or whatever you choose)
+MIT
