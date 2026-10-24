@@ -13,6 +13,8 @@ async function load() {
   document.getElementById("domains").value        = settings.blockedDomains.join("\n");
   document.getElementById("keywords").value       = settings.manipulativeKeywords.join("\n");
 
+  document.getElementById("whitelist").value = settings.whitelistDomains.join("\n");
+
   if (settings.managed) {
     const saveBtn = document.getElementById("save-btn");
     saveBtn.disabled = true;
@@ -45,10 +47,11 @@ document.getElementById("save-btn").addEventListener("click", async () => {
       frictionMode:         document.getElementById("frictionMode").checked,
       blockNews:            document.getElementById("blockNews").checked,
       blockSocial:          document.getElementById("blockSocial").checked,
-      countdownSeconds:     Number(document.getElementById("countdown").value) || 12,
+      countdownSeconds:     Number(document.getElementById("countdown").value),
       intensity:            document.getElementById("intensity").value,
       blockedDomains:       document.getElementById("domains").value
                               .split("\n").map((v) => v.trim()).filter(Boolean),
+      whitelistDomains: document.getElementById("whitelist").value.split("\n").map(v => v.trim()).filter(Boolean),
       manipulativeKeywords: document.getElementById("keywords").value
                               .split("\n").map((v) => v.trim()).filter(Boolean),
     },

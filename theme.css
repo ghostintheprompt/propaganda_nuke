@@ -485,6 +485,7 @@ body {
 /* ── Hidden element ────────────────────────────────── */
 
 .pn-hidden {
+  display: none !important;
   opacity: 0.05 !important;
   pointer-events: none !important;
   filter: blur(3px) !important;
@@ -724,7 +725,7 @@ body {
 }
 
 .pn-forensic-report::before {
-  content: 'Forensic Aftermath Report';
+  content: 'Intervention Record';
   position: absolute;
   top: -9px;
   left: 12px;
@@ -774,3 +775,7 @@ body {
   color: var(--pn-text);
   word-break: break-all;
 }
+
+/* Tox World replacement preserves the hidden item's original DOM nodes. */
+.pn-sun-block { padding: 20px; text-align: center; border: 1px solid #d2b64e; background: #171715; color: #eee; }
+.pn-nuke-container { position: fixed !important; inset: 0 !important; z-index: 2147483647 !important; overflow: auto !important; background: #171715 !important; }

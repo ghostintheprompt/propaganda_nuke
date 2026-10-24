@@ -9,25 +9,11 @@
     : settings.intensity === "medium" ? 3
     : 2; // high (default)
 
-  function domainMatches(urlString) {
-    try {
-      const url = new URL(urlString, location.origin);
-      return settings.blockedDomains.some(
-        (domain) => url.hostname === domain || url.hostname.endsWith(`.${domain}`)
-      );
-    } catch {
-      return false;
-    }
-  }
-
-  function keywordScore(text) {
-    const lower = (text || "").toLowerCase();
-    let score = 0;
-    for (const word of settings.manipulativeKeywords) {
-      if (lower.includes(word.toLowerCase())) score += 1;
-    }
-    return score;
-  }
+  if (PNCore.whitelisted(location.href, settings)) return;
+  const domainMatches = value => {
+    try { return PNCore.domainMatches(new URL(value, location.href).href, settings); } catch { return false; }
+  };
+  const keywordScore = text => settings.manipulativeKeywords.filter(word => PNCore.keywordScore(text, [word]) > 0).length;
 
   function addBadgeBefore(el, label) {
     if (!el?.parentNode) return;
@@ -42,7 +28,25 @@
     if (!el || el.dataset.pnProcessed) return false;
     el.dataset.pnProcessed = "1";
     el.classList.add("pn-hidden");
-    addBadgeBefore(el, reason);
+    const replacement = document.createElement('div');
+    replacement.className = 'tox-world-block pn-sun-block';
+    replacement.setAttribute('role', 'note');
+    const sun = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    sun.setAttribute('width', '120'); sun.setAttribute('height', '120'); sun.setAttribute('viewBox', '0 0 120 120');
+    sun.setAttribute('aria-label', 'Sun'); sun.setAttribute('role', 'img');
+    const circle = document.createElementNS(sun.namespaceURI, 'circle');
+    for (const [key,value] of Object.entries({cx:60,cy:60,r:30,fill:'#FFD700'})) circle.setAttribute(key,value);
+    sun.appendChild(circle);
+    for (let angle=0;angle<360;angle+=45) {
+      const line=document.createElementNS(sun.namespaceURI,'line');
+      for (const [key,value] of Object.entries({x1:60,y1:10,x2:60,y2:25,stroke:'#FFD700','stroke-width':3,transform:`rotate(${angle} 60 60)`})) line.setAttribute(key,value);
+      sun.appendChild(line);
+    }
+    const label=document.createElement('p'); label.textContent=`Filtered: ${reason}`;
+    const reveal=document.createElement('button'); reveal.textContent='Show this item';
+    reveal.addEventListener('click',()=>{ el.classList.remove('pn-hidden'); replacement.remove(); });
+    replacement.append(sun,label,reveal);
+    el.parentNode.insertBefore(replacement,el);
     return true;
   }
 
@@ -59,21 +63,6 @@
     document.body.prepend(banner);
   }
 
-  /**
-   * Radiation Leak: Wraps keywords in toxic spans.
-   */
-  function applyToxicity(el) {
-    if (!el || el.dataset.pnToxic) return;
-    el.dataset.pnToxic = "1";
-    
-    let html = el.innerHTML;
-    settings.manipulativeKeywords.forEach(word => {
-      const regex = new RegExp(`(\\b${word}\\b)`, 'gi');
-      html = html.replace(regex, '<span class="pn-toxic-leak">$1</span>');
-    });
-    el.innerHTML = html;
-  }
-
   function scanLinks() {
     let hidden = 0;
     let totalPageScore = 0;
@@ -81,6 +70,7 @@
     const links = document.querySelectorAll("a[href]:not([data-pn-scanned])");
     for (const link of links) {
       link.dataset.pnScanned = "1";
+      if (link.closest(".pn-sun-block, .pn-nuke-container, [data-pn-processed]")) continue;
       const href = link.getAttribute("href");
       if (!href || href.startsWith("#") || href.startsWith("javascript:")) continue;
 
@@ -98,11 +88,17 @@
 
       if (blockedDomain || score >= scoreThreshold) {
         // Apply leak effect briefly before hiding if score is high
-        if (score > scoreThreshold) applyToxicity(container);
+        // Preserve original DOM nodes and event listeners behind the sun replacement.
         
         const reason = blockedDomain ? "blocked domain" : `score:${score}`;
         if (hideElement(container, reason)) hidden++;
       }
+    }
+
+    // Comment-like blocks can contain no links at all.
+    for (const block of document.querySelectorAll('article, [role="comment"], .comment, [data-comment-id], p')) {
+      if (block.closest('.pn-sun-block, .pn-nuke-container, .pn-banner, [data-pn-processed]')) continue;
+      if (keywordScore(block.textContent) >= scoreThreshold && hideElement(block, 'keyword threshold')) hidden++;
     }
 
     // Apply global decay based on total page score
@@ -113,13 +109,14 @@
     }
 
     if (hidden > 0) {
-      chrome.runtime.sendMessage({ type: "incrementStat", key: "hiddenResults" });
+      chrome.runtime.sendMessage({ type: "incrementStat", key: "hiddenResults", amount: hidden });
       injectBanner(hidden);
     }
   }
 
   // Page-level block: redirect to friction screen
-  if (settings.strictMode && domainMatches(location.href)) {
+  const bypass = await chrome.runtime.sendMessage({ type: "consumeNavigation" });
+  if (settings.strictMode && domainMatches(location.href) && !bypass?.allowed) {
     chrome.runtime.sendMessage({ type: "incrementStat", key: "blockedPages" });
     window.location.replace(
       chrome.runtime.getURL("blocked.html") +
@@ -152,7 +149,7 @@
   scanLinks();
 
   // Page-level Semantic Nuke
-  if (!domainMatches(location.href)) {
+  if (!domainMatches(location.href) && settings.intensity !== "low") {
     const pageText = document.body.innerText;
     const pageScore = window.SemanticNuke.calculateScore(pageText, settings.manipulativeKeywords);
     // Thresholds: High=15, Medium=30, Low=60
@@ -168,11 +165,6 @@
         triggers: triggers,
         url: location.href
       });
-
-      // Offensive Simulation: s1_sentiment_bomb
-      if (pageScore > nukeThreshold * 2) {
-        window.Scenarios?.s1_sentiment_bomb();
-      }
 
       window.SemanticNuke.execute(pageScore, triggers);
     }

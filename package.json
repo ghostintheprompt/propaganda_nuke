@@ -1,0 +1,12 @@
+{
+  "name": "propaganda_nuke",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/simulation.js",
+    "test:browser": "node tests/browser-smoke.js"
+  },
+  "devDependencies": {
+    "playwright": "1.59.1"
+  }
+}
