@@ -1,12 +1,12 @@
 /**
  * Fallout Map Utility
- * Generates signed forensic logs of blocked Influence Operation (IO) domains.
+ * Exports configured domains and counters with an unkeyed SHA-256 checksum.
  */
 const FalloutMap = {
   /**
-   * Generates a SHA-256 signature for a given text.
+   * Computes a SHA-256 checksum; this is not a digital signature.
    */
-  async sign(text) {
+  async checksum(text) {
     const encoder = new TextEncoder();
     const data = encoder.encode(text);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -21,20 +21,19 @@ const FalloutMap = {
   async export(settings) {
     const logData = {
       timestamp: new Date().toISOString(),
-      agent: "Propaganda Nuke v0.2.0",
-      threat_actor_list: settings.blockedDomains,
+      agent: "Propaganda Nuke v0.3.0",
+      configured_domains: settings.blockedDomains,
       stats: settings.stats,
-      decontamination_active: true,
-      integrity_check: "SHA-256"
+      integrity_check: "SHA-256",
+      attribution: "Local configuration snapshot; not proof of influence operations or authenticated origin."
     };
 
     const payload = JSON.stringify(logData, null, 2);
-    const signature = await this.sign(payload);
+    const checksum = await this.checksum(payload);
     
     const finalLog = {
       ...logData,
-      signature: signature,
-      attribution: "Forensic record generated for cognitive security audit."
+      checksum: checksum
     };
 
     const blob = new Blob([JSON.stringify(finalLog, null, 2)], { type: 'application/json' });

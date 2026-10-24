@@ -1,10 +1,17 @@
 {
   "manifest_version": 3,
   "name": "propaganda_nuke",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A calm, brutal filter against manipulative news, social feeds, and emotional capture.",
-  "permissions": ["storage", "tabs", "scripting", "declarativeNetRequest"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
@@ -18,22 +25,29 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "js": [
-        "war_room/fallout_map.js",
+        "core.js",
         "war_room/incident_manager.js",
-        "counter_measures/scenarios.js",
         "counter_measures/semantic_nuke.js",
         "content.js"
       ],
-      "css": ["theme.css"],
+      "css": [
+        "theme.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["blocked.html"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "blocked.html"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ]
 }

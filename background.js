@@ -1,180 +1,80 @@
-const DEFAULT_SETTINGS = {
-  enabled: true,
-  strictMode: true,
-  frictionMode: true,
-  blockNews: true,
-  blockSocial: true,
-  countdownSeconds: 12,
-  intensity: "high",
-  blockedDomains: [
-    "facebook.com",
-    "instagram.com",
-    "tiktok.com",
-    "x.com",
-    "twitter.com",
-    "reddit.com",
-    "news.google.com",
-    "cnn.com",
-    "foxnews.com",
-    "msnbc.com",
-    "nytimes.com",
-    "washingtonpost.com",
-    "theguardian.com",
-    "dailymail.co.uk",
-    "nypost.com",
-    "buzzfeed.com",
-    "huffpost.com"
-  ],
-  manipulativeKeywords: [
-    "shocking",
-    "outrage",
-    "panic",
-    "terrifying",
-    "devastating",
-    "bombshell",
-    "furious",
-    "meltdown",
-    "destroyed",
-    "slammed",
-    "explodes",
-    "chaos",
-    "fear",
-    "crisis",
-    "disaster",
-    "apocalypse",
-    "doomed",
-    "horrifying",
-    "rage",
-    "catastrophe",
-    "stuns",
-    "humiliates",
-    "blasts",
-    "erupts"
-  ],
-  stats: {
-    blockedClicks: 0,
-    hiddenResults: 0,
-    blockedPages: 0
-  }
-};
-
-const TRACKER_PARAMS = [
-  "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", 
-  "fbclid", "gclid", "msclkid", "mc_eid", "igshid", "tt_content_id", "s_kwcid"
-];
-
-async function updateDecontaminationRules() {
-  try {
-    const rules = [
-      ...TRACKER_PARAMS.map((param, index) => ({
-        id: index + 1,
-        priority: 1,
-        action: {
-          type: "redirect",
-          redirect: { transform: { queryTransform: { removeParameters: [param] } } }
-        },
-        condition: {
-          urlFilter: `*?*${param}=*`,
-          resourceTypes: ["main_frame", "sub_frame"]
-        }
-      })),
-      {
-        id: 1001,
-        priority: 2,
-        action: { type: "block" },
-        condition: {
-          urlFilter: "*/fingerprint.js*",
-          resourceTypes: ["script"]
-        }
-      },
-      {
-        id: 1002,
-        priority: 2,
-        action: { type: "block" },
-        condition: {
-          urlFilter: "*pixel.facebook.com*",
-          resourceTypes: ["image", "script"]
-        }
-      }
-    ];
-
-    const oldRules = await chrome.declarativeNetRequest.getDynamicRules();
-    const oldRuleIds = oldRules.map(r => r.id);
-
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: oldRuleIds,
-      addRules: rules
-    });
-    console.log("Radiation Shield: Decontamination & Fingerprint blocking deployed.");
-  } catch (err) {
-    console.error("Failed to deploy decontamination rules:", err);
-  }
-}
+importScripts('core.js');
+const { normalizeSettings, cleanUrl, TRACKER_PARAMS } = PNCore;
 
 async function getSettings() {
-  const syncData = await chrome.storage.sync.get("pn_settings");
-  
-  // Attempt to load Enterprise GPO settings
-  let managedData = {};
-  try {
-    managedData = await chrome.storage.managed.get("pn_settings");
-  } catch (e) {
-    // Managed storage not available or no policy set
-  }
-
-  let settings = syncData.pn_settings || structuredClone(DEFAULT_SETTINGS);
-  
-  if (managedData && managedData.pn_settings) {
-    // Enterprise overrides
-    settings = { ...settings, ...managedData.pn_settings, managed: true };
-  }
-
-  if (!syncData.pn_settings) {
-    await chrome.storage.sync.set({ pn_settings: settings });
-  }
-  return settings;
+  const local = await chrome.storage.sync.get('pn_settings');
+  let policy = {};
+  try { policy = (await chrome.storage.managed.get('pn_settings')).pn_settings || {}; } catch {}
+  return { ...normalizeSettings({ ...local.pn_settings, ...policy }), managed: Object.keys(policy).length > 0 };
 }
-
-chrome.runtime.onInstalled.addListener(() => {
-  updateDecontaminationRules();
-});
-
-chrome.runtime.onStartup.addListener(() => {
-  updateDecontaminationRules();
-});
-
-async function saveSettings(partial) {
-  const current = await getSettings();
-  const merged = { ...current, ...partial, stats: current.stats };
-  await chrome.storage.sync.set({ pn_settings: merged });
-  return merged;
-}
-
-async function incrementStat(key) {
+async function updateDecontaminationRules() {
   const settings = await getSettings();
-  if (settings.stats && key in settings.stats) {
-    settings.stats[key] += 1;
-    await chrome.storage.sync.set({ pn_settings: settings });
-  }
+  const rules = settings.enabled ? [
+    { id: 1, priority: 1, action: { type: 'redirect', redirect: { transform: { queryTransform: { removeParams: TRACKER_PARAMS } } } },
+      condition: { regexFilter: `[?&](${TRACKER_PARAMS.join('|')})=`, resourceTypes: ['main_frame','sub_frame'] } },
+    { id: 1001, priority: 2, action: { type: 'block' }, condition: { urlFilter: '*/fingerprint.js*', resourceTypes: ['script'] } },
+    { id: 1002, priority: 2, action: { type: 'block' }, condition: { requestDomains: ['pixel.facebook.com'], resourceTypes: ['image','script'] } }
+  ] : [];
+  const old = await chrome.declarativeNetRequest.getDynamicRules();
+  await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: old.map(rule => rule.id), addRules: rules });
 }
-
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg.type === "getSettings") {
-    getSettings().then((settings) => sendResponse({ ok: true, settings }));
-    return true;
+async function saveSettings(partial) {
+  const existing = (await chrome.storage.sync.get('pn_settings')).pn_settings || {};
+  const merged = normalizeSettings({ ...existing, ...partial, stats: existing.stats });
+  delete merged.managed;
+  await chrome.storage.sync.set({ pn_settings: merged });
+  await updateDecontaminationRules();
+}
+async function appendIncident(incident) {
+  const alert = { incident_id: crypto.randomUUID(), timestamp: new Date().toISOString(), type: incident.type, severity: incident.severity, metadata: incident.metadata };
+  delete alert.signature;
+  delete alert.checksum;
+  const bytes = new TextEncoder().encode(JSON.stringify(alert));
+  alert.checksum = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2,'0')).join('');
+  const stored = await chrome.storage.local.get('forensic_vault');
+  const vault = [...(stored.forensic_vault || []), alert].slice(-100);
+  await chrome.storage.local.set({ forensic_vault: vault });
+  return alert;
+}
+async function handleMessage(msg, sender) {
+  if (msg.type === 'getSettings') return { ok: true, settings: await getSettings() };
+  if (msg.type === 'saveSettings') { await saveSettings(msg.settings); return { ok: true }; }
+  if (msg.type === 'incrementStat') {
+    const stored = (await chrome.storage.sync.get('pn_settings')).pn_settings || {};
+    const settings = normalizeSettings(stored);
+    if (Object.hasOwn(PNCore.DEFAULT_SETTINGS.stats, msg.key)) {
+      settings.stats[msg.key] += Math.max(1, Math.min(1000, Number(msg.amount) || 1));
+      await chrome.storage.sync.set({ pn_settings: settings });
+    }
+    return { ok: true };
   }
-  if (msg.type === "saveSettings") {
-    saveSettings(msg.settings).then(() => sendResponse({ ok: true }));
-    return true;
+  if (msg.type === 'appendIncident') return { ok: true, alert: await appendIncident(msg.incident) };
+  if (msg.type === 'getVault') return { ok: true, vault: (await chrome.storage.local.get('forensic_vault')).forensic_vault || [] };
+  if (msg.type === 'authorizeNavigation') {
+    if (!sender.url?.startsWith(chrome.runtime.getURL('blocked.html') + '?') || !Number.isInteger(sender.tab?.id)) throw new Error('Override requires the intervention page');
+    const target = cleanUrl(msg.target);
+    await chrome.storage.session.set({ [`override:${sender.tab.id}`]: { target, expires: Date.now() + 120000 } });
+    await appendIncident({ type: 'DOMAIN_OVERRIDE', severity: 'INFO', metadata: { url: target } });
+    return { ok: true, target };
   }
-  if (msg.type === "incrementStat") {
-    incrementStat(msg.key).then(() => sendResponse({ ok: true }));
-    return true;
+  if (msg.type === 'consumeNavigation') {
+    if (!Number.isInteger(sender.tab?.id)) return { ok: true, allowed: false };
+    const key = `override:${sender.tab.id}`;
+    const grant = (await chrome.storage.session.get(key))[key];
+    const target = cleanUrl(sender.url);
+    const allowed = !!grant && grant.expires > Date.now() && grant.target === target;
+    if (grant && (allowed || grant.expires <= Date.now())) await chrome.storage.session.remove(key);
+    return { ok: true, allowed };
   }
-  if (msg.type === "getVault") {
-    chrome.storage.local.get("forensic_vault").then(data => {
-      sendResponse({ ok: true, vault: data.forensic_vault || [] });
-    });
-    return true;
-  }
+  throw new Error('Unsupported message');
+}
+// Serialize mutations across tabs so read-modify-write operations do not lose events.
+let pending = Promise.resolve();
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  pending = pending.then(() => handleMessage(msg, sender)).then(sendResponse, error => sendResponse({ ok: false, error: error.message }));
+  return true;
 });
+const refresh = () => { pending = pending.then(updateDecontaminationRules).catch(error => console.error('Radiation Shield update failed:', error)); };
+chrome.runtime.onInstalled.addListener(refresh);
+chrome.runtime.onStartup.addListener(refresh);
+chrome.storage.onChanged.addListener((_changes, area) => { if (area === 'managed') refresh(); });

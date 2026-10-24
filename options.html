@@ -169,6 +169,11 @@
         </div>
       </div>
 
+      <div class="pn-options-section">
+        <p class="pn-section-title">Whitelist</p>
+        <label class="pn-label" for="whitelist">Allowed domains, one per line</label>
+        <textarea class="pn-textarea" id="whitelist"></textarea>
+      </div>
       <!-- Keywords -->
       <div class="pn-options-section">
         <p class="pn-section-title">Manipulative keywords</p>
@@ -182,7 +187,7 @@
       <div class="pn-options-section">
         <p class="pn-section-title">War Room: Forensic Export</p>
         <p class="pn-copy" style="font-size: 11px; margin-bottom: 12px;">
-          Generate a signed "Digital Fallout Map" (JSON) of all blocked Influence Operation domains for forensic attribution.
+          Export your configured domain list and counters with a SHA-256 checksum. The file is editable; the checksum is not a signature or actor attribution.
         </p>
         <div class="pn-form-row">
            <button id="export-btn" class="pn-button pn-button--ghost-red" style="flex: 0 1 auto; padding: 10px 20px;">Export Fallout Map (.JSON)</button>

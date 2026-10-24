@@ -11,44 +11,14 @@
   const isSafe = /^https?:\/\//i.test(target);
   urlEl.textContent = target || "(unknown)";
 
-  // Forensic Analysis logic for portfolio demonstration
-  function runForensics(url) {
-    const scoreEl = document.getElementById("forensic-score");
-    const typeEl = document.getElementById("forensic-type");
-    const triggerEl = document.getElementById("forensic-triggers");
-
-    try {
-      const host = new URL(url).hostname.toLowerCase();
-      const isSocial = ["facebook.com", "x.com", "twitter.com", "instagram.com", "tiktok.com", "reddit.com"].some(d => host.includes(d));
-      const isNews = ["cnn.com", "foxnews.com", "msnbc.com", "nytimes.com"].some(d => host.includes(d));
-      
-      // Seeded random for consistency per domain
-      const seed = host.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const score = 65 + (seed % 30);
-      
-      scoreEl.textContent = `${score}%`;
-      
-      if (isSocial) {
-        typeEl.textContent = "COGNITIVE_CAPTURE";
-        triggerEl.textContent = "ALGORITHMIC_BIAS";
-      } else if (isNews) {
-        typeEl.textContent = "NARRATIVE_IO";
-        triggerEl.textContent = "EMOTIONAL_PRIMING";
-      } else {
-        typeEl.textContent = "IO_SURVEILLANCE";
-        triggerEl.textContent = "DOMAIN_MATCH";
-      }
-    } catch (e) {
-      scoreEl.textContent = "0%";
-      typeEl.textContent = "UNTRUSTED_HOST";
-      triggerEl.textContent = "CRITICAL_ERROR";
-    }
-  }
-
-  runForensics(target);
+  // A domain rule is not a measured manipulation score or actor attribution.
+  document.getElementById('forensic-score').textContent = 'Not measured';
+  document.getElementById('forensic-type').textContent = 'DOMAIN_RULE';
+  document.getElementById('forensic-triggers').textContent = 'User-configured blocklist';
 
   const response = await chrome.runtime.sendMessage({ type: "getSettings" });
-  const seconds = response?.settings?.countdownSeconds ?? 12;
+  const seconds = response?.settings?.frictionMode === false ? 0 : (response?.settings?.countdownSeconds ?? 12);
+  document.getElementById("shield-status").textContent = response?.settings?.enabled ? "Enabled in settings" : "Disabled";
 
   if (!isSafe || seconds <= 0) {
     // No valid target or no countdown — show override immediately if safe
@@ -86,8 +56,10 @@
     }
   });
 
-  openBtn.addEventListener("click", () => {
+  openBtn.addEventListener("click", async () => {
     if (!isSafe) return; // belt-and-suspenders
-    window.location.href = target;
+    if (openBtn.disabled) return;
+    const approved = await chrome.runtime.sendMessage({ type: "authorizeNavigation", target });
+    if (approved?.ok) window.location.href = approved.target;
   });
 })();
